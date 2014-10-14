@@ -28,9 +28,15 @@
     [(cons p _) (cons (cons (car p) (+ prob (cdr p))) (convert-probs (rest lop) (+ prob (cdr p))))]))
 
 (define (choose-albums table [n 10])
-  (define denom (foldl + 0 (hash-map table (lambda (k v) (define l (length v)) (+ l (* (- k 1) l))))))
+  (define (lengths table)
+    (define h (make-hash))
+    (hash-for-each table (lambda (k v)
+            (hash-set! h k (length (hash-ref table k))))) h)
+    (define t-lengths (lengths table))
+
+  (define denom (foldl + 0 (hash-map table (lambda (k v) (define l (hash-ref t-lengths k)) (+ l (* (- k 1) l))))))
   (define probs (convert-probs
-                 (sort (hash-map table(lambda (k v) (cons k (* k (length v)))))
+                 (sort (hash-map table (lambda (k v) (cons k (* k (hash-ref t-lengths k)))))
                        (lambda (x y) (< (car x) (car y))))))
   (define (trav-probs r lop)
     (if (< r (cdr (first lop))) (car (first lop)) (trav-probs r (rest lop))))
